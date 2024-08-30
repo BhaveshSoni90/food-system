@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canteen</title>
+    <style>
+        /* CSS for Header */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 20px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        nav {
+            display: flex;
+            gap: 15px;
+        }
+
+        nav .nav-link {
+            color: #fff;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        nav .nav-link:hover,
+        nav .nav-link.active {
+            background-color: #555;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            nav {
+                flex-direction: column;
+                gap: 10px;
+                width: 100%;
+            }
+
+            nav .nav-link {
+                display: block;
+                padding: 10px;
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 1.2em;
+            }
+
+            nav .nav-link {
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">Canteen</div>
+            <nav>
+                <a href="index.html" id="home-link" class="nav-link">Home</a>
+                <a href="login.html" id="login-link" class="nav-link" style="display: none;">Login</a>
+                <a href="register.html" id="register-link" class="nav-link" style="display: none;">Register</a>
+                <a href="products.html" id="view-products" class="nav-link" style="display: none;">View Products</a>
+                <a href="upload-product.html" id="upload-product" class="nav-link" style="display: none;">Upload Product Details</a>
+                <a href="admin-orders.html" id="view-orders" class="nav-link" style="display: none;">View Orders</a>
+                <a href="cart.html" id="add-to-cart" class="nav-link" style="display: none;">Cart</a>
+                <a href="my-orders.html" id="my-order" class="nav-link" style="display: none;">My Orders</a>
+                <a href="profile.html" id="my-profile" class="nav-link" style="display: none;">My Profile</a>
+                <a href="#" id="logout-link" class="nav-link" style="display: none;" onclick="logoutUser()">Logout</a>
+            </nav>
+        </div>
+    </header>
+
+    <script>
+        // JavaScript to handle active link highlighting
+        document.addEventListener('DOMContentLoaded', function() {
+            const links = document.querySelectorAll('nav .nav-link');
+            const currentUrl = window.location.href;
+            links.forEach(link => {
+                if (link.href === currentUrl) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

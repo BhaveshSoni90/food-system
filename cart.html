@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart</title>
+    <script type="module" src="js/app.js" defer></script> <!-- Load app.js for navbar functionality -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 20px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .cart {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .cart-item {
+            border-bottom: 1px solid #ddd;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+        .cart-item button {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+        }
+        .cart-item button:hover {
+            background-color: #c82333;
+        }
+        .cart-item input {
+            width: 60px;
+            text-align: center;
+        }
+        .cart-item .quantity-controls {
+            display: flex;
+            align-items: center;
+        }
+        .cart-item .quantity-controls button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+        }
+        .cart-item .quantity-controls button:hover {
+            background-color: #0056b3;
+        }
+        .order-actions {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .order-actions button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+        }
+        .order-actions button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>My Cart</h1>
+    </header>
+    <nav id="navbar-container"></nav>
+    <div id="cart-section" class="cart">
+        <p>Loading cart...</p>
+    </div>
+    <div class="order-actions">
+        <button onclick="placeOrder()">Place Order</button>
+    </div>
+    <script>
+        // Load the navbar HTML into the page
+        fetch('navbar.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('navbar-container').innerHTML = data;
+                highlightCurrentPage();
+            });
+
+        function highlightCurrentPage() {
+            const currentPage = window.location.pathname.split('/').pop();
+            const links = document.querySelectorAll('nav a');
+            links.forEach(link => {
+                if (link.href.includes(currentPage)) {
+                    link.classList.add('active');
+                }
+            });
+        }
+    </script>
+    <script type="module" src="js/cart.js" defer></script>
+</body>
+</html>

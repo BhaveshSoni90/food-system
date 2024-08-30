@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Product - Admin</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        nav {
+            display: flex;
+            align-items: center;
+            background-color: #333;
+            color: white;
+            padding: 0.5rem 1rem;
+            position: relative;
+        }
+        .logo {
+            font-size: 1.5rem;
+            margin-right: auto;
+        }
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+        }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+        }
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        .form-group input[type="text"], 
+        .form-group input[type="number"] {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-group input[type="file"] {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-group button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #218838;
+        }
+        .error {
+            color: red;
+        }
+        .product-list {
+            margin-top: 2rem;
+        }
+        .product-list ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .product-list li {
+            border-bottom: 1px solid #ddd;
+            padding: 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .product-list img {
+            max-width: 100px;
+            border-radius: 4px;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+    <script type="module" src="js/app.js" defer></script>
+</head>
+<body>
+    <header><h1>Upload Products</h1></header>
+    <nav>
+        <div class="logo">Canteen</div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="#" id="upload-product">Upload Product</a>
+            <a href="admin-orders.html" id="view-orders">View Orders</a>            
+            <a href="#" id="logout-link">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="auth-status" class="hidden">
+            <p>You need to <a href="login.html">log in</a> to access this page.</p>
+        </div>
+
+        <div id="upload-section" class="hidden">
+            <h1>Upload Product</h1>
+            <form id="upload-product-form">
+                <div class="form-group">
+                    <label for="product-name">Product Name:</label>
+                    <input type="text" id="product-name" name="product-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="product-price">Price ($):</label>
+                    <input type="number" id="product-price" name="product-price" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="product-image">Image (optional):</label>
+                    <input type="file" id="product-image" name="product-image">
+                </div>
+                <div class="form-group">
+                    <button type="submit">Upload Product</button>
+                </div>
+                <div id="upload-product-error" class="error"></div>
+            </form>
+
+            <div class="product-list">
+                <h2>Uploaded Products</h2>
+                <ul id="products-list"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCorKDXJdM-Y0c9-vEyUoollZuJ89IhB4U",
+            authDomain: "food-ordering-system-3b207.firebaseapp.com",
+            projectId: "food-ordering-system-3b207",
+            storageBucket: "food-ordering-system-3b207.appspot.com",
+            messagingSenderId: "41397958881",
+            appId: "1:41397958881:web:5745776b8632cb13639fa0",
+            measurementId: "G-F11SP48397"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const firestore = getFirestore(app);
+        const storage = getStorage(app);
+
+        // Handle form submission
+        document.getElementById('upload-product-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const name = document.getElementById('product-name').value;
+            const price = parseFloat(document.getElementById('product-price').value);
+            const imageFile = document.getElementById('product-image').files[0];
+            const errorDiv = document.getElementById('upload-product-error');
+
+            if (!name || isNaN(price)) {
+                errorDiv.textContent = 'Please fill in all required fields.';
+                return;
+            }
+
+            try {
+                let imageUrl = null;
+                if (imageFile) {
+                    // Upload image
+                    const imageRef = ref(storage, `images/${imageFile.name}`);
+                    await uploadBytes(imageRef, imageFile);
+                    imageUrl = await getDownloadURL(imageRef);
+                }
+
+                // Add product to Firestore
+                await addDoc(collection(firestore, 'products'), {
+                    name,
+                    price,
+                    imageUrl
+                });
+
+                alert('Product uploaded successfully!');
+                document.getElementById('upload-product-form').reset();
+                loadProducts(); // Reload product list
+            } catch (error) {
+                errorDiv.textContent = 'Error uploading product: ' + error.message;
+            }
+        });
+
+        // Load products from Firestore
+        async function loadProducts() {
+            const productsList = document.getElementById('products-list');
+            productsList.innerHTML = '<li>Loading products...</li>'; // Show loading state
+
+            try {
+                const snapshot = await getDocs(collection(firestore, 'products'));
+                productsList.innerHTML = ''; // Clear loading state
+
+                snapshot.forEach(doc => {
+                    const product = doc.data();
+                    productsList.innerHTML += `
+                        <li>
+                            ${product.imageUrl ? `<img src="${product.imageUrl}" alt="${product.name}">` : ''}
+                            <div>
+                                <strong>${product.name}</strong><br>
+                                Price: $${product.price.toFixed(2)}
+                            </div>
+                        </li>
+                    `;
+                });
+
+                if (snapshot.empty) {
+                    productsList.innerHTML = '<li>No products found.</li>';
+                }
+            } catch (error) {
+                console.error('Error loading products:', error.message);
+                productsList.innerHTML = '<li>Error loading products.</li>';
+            }
+        }
+
+        // Check authentication state
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                document.getElementById('auth-status').classList.add('hidden');
+                document.getElementById('upload-section').classList.remove('hidden');
+                loadProducts(); // Load products if user is authenticated
+            } else {
+                document.getElementById('auth-status').classList.remove('hidden');
+                document.getElementById('upload-section').classList.add('hidden');
+            }
+        });
+
+        // Handle logout
+        document.getElementById('logout-link').addEventListener('click', async (event) => {
+            event.preventDefault();
+            try {
+                await auth.signOut();
+                window.location.href = 'login.html'; // Redirect to login page
+            } catch (error) {
+                console.error('Error logging out:', error.message);
+            }
+        });
+    </script>
+</body>
+</html>

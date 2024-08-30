@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        /* Styling for the orders section */
+        #orders-section {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #orders-section h2 {
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        #orders-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #orders-list li {
+            border-bottom: 1px solid #ddd;
+            padding: 15px 0;
+        }
+
+        #orders-list li h3 {
+            margin: 0;
+            color: #555;
+        }
+
+        #orders-list li ul {
+            padding-left: 20px;
+            margin: 10px 0 0;
+        }
+
+        #orders-list li ul li {
+            margin: 5px 0;
+            color: #666;
+        }
+
+        /* Loading and error messages */
+        #orders-section p {
+            font-size: 18px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <nav id="navbar-container"></nav>
+
+    <div id="orders-section"></div>
+
+    <script type="module">
+
+fetch('navbar.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('navbar-container').innerHTML = data;
+                highlightCurrentPage();
+            });
+
+        function highlightCurrentPage() {
+            const currentPage = window.location.pathname.split('/').pop();
+            const links = document.querySelectorAll('nav a');
+            links.forEach(link => {
+                if (link.href.includes(currentPage)) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+
+        // Import Firebase functions
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js';
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js';
+        import { getFirestore, collection, query, where, getDocs, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCorKDXJdM-Y0c9-vEyUoollZuJ89IhB4U",
+            authDomain: "food-ordering-system-3b207.firebaseapp.com",
+            projectId: "food-ordering-system-3b207",
+            storageBucket: "food-ordering-system-3b207.appspot.com",
+            messagingSenderId: "41397958881",
+            appId: "1:41397958881:web:5745776b8632cb13639fa0",
+            measurementId: "G-F11SP48397"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const firestore = getFirestore(app);
+
+        async function loadOrders(userId) {
+            const ordersSection = document.getElementById('orders-section');
+            if (!ordersSection) return;
+
+            ordersSection.innerHTML = '<p>Loading orders...</p>';
+
+            if (!userId) {
+                ordersSection.innerHTML = '<p>Please log in to view your orders.</p>';
+                return;
+            }
+
+            try {
+                const ordersQuery = query(collection(firestore, 'orders'), where('userId', '==', userId));
+                const snapshot = await getDocs(ordersQuery);
+
+                if (snapshot.empty) {
+                    ordersSection.innerHTML = '<p>You have no orders yet.</p>';
+                    return;
+                }
+
+                ordersSection.innerHTML = '<h2>Your Orders</h2><ul id="orders-list"></ul>';
+                const ordersList = document.getElementById('orders-list');
+
+                snapshot.forEach(orderDoc => {
+                    const order = orderDoc.data();
+                    ordersList.innerHTML += `
+                        <li>
+                            <h3>Order ID: ${orderDoc.id}</h3>
+                            <p>Timestamp: ${new Date(order.timestamp.seconds * 1000).toLocaleString()}</p>
+                            <ul>
+                                ${order.items.map(item => `<li>Product ID: ${item.productId} - Quantity: ${item.quantity || 1}</li>`).join('')}
+                            </ul>
+                        </li>
+                    `;
+                });
+            } catch (error) {
+                console.error('Error loading orders:', error.message);
+                ordersSection.innerHTML = '<p>Error loading orders.</p>';
+            }
+        }
+
+        // Check authentication state and load orders
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                loadOrders(user.uid); // Load orders for the logged-in user
+            } else {
+                document.getElementById('orders-section').innerHTML = '<p>Please log in to view your orders.</p>';
+            }
+        });
+    </script>
+</body>
+</html>
